@@ -58,7 +58,7 @@ The main components of the code are:
 The program is run as:
 
 ```
-python project.py
+python stock-manager.py
 ```
 
 On startup, existing data is loaded from the CSV files. If running for the first time, sample data is created.
