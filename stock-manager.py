@@ -4,7 +4,7 @@ import sys
 import csv
 from tabulate import tabulate
 
-api_key = ""
+api_key = "141c9a48e97a478eb2c1b8685bc38f03"
 
 
 def display_menu_options(stock_list, totals, current_index):
@@ -39,9 +39,9 @@ def display_menu_options(stock_list, totals, current_index):
 
 def sell_stock(stock_list, totals, current_index):
     indexes = list(int(stock["Index"]) for stock in stock_list)
+    # checks to see if there are stocks available to sell, returns to menu if none to sell
     if len(indexes) == 0:
         input("There are no stocks available to sell, press enter to continue: ")
-        print()
         return stock_list, totals, current_index
 
     while True:
@@ -67,7 +67,6 @@ def sell_stock(stock_list, totals, current_index):
     totals["Total Invested"] = f"${'{:.2f}'.format(total_invested - current_stock_price)}"
 
     input(f"{stock_list[stock_to_sell - 1]['Stock Name']} has been sold, press enter to continue: ")
-    print()
     del stock_list[stock_to_sell - 1]
     current_index -= 1
 
@@ -143,7 +142,7 @@ def update_stock_info(stock_list, totals):
         if stock["Ticker"] in seen:
             current_stock_price = found_stock_prices[stock["Ticker"]]
             total_price = current_stock_price * float(stock["Quantity"])
-            stock["Price (USD)"] = "{:.2f}".format(total_price)
+            stock["Price (USD)"] = f"{total_price:.2f}"
             # Will send a request for the current price of the stock and update the stock_list
 
             stock["Current Price"] = current_stock_price
@@ -158,7 +157,7 @@ def update_stock_info(stock_list, totals):
             found_stock_prices.update({stock["Ticker"]: current_stock_price})  # saves for use in case a duplicate is
             # found so that another request doesn't have to be made
             total_price = current_stock_price * float(stock["Quantity"])
-            stock["Price (USD)"] = "{:.2f}".format(total_price)
+            stock["Price (USD)"] = f"{total_price:.2f}"
 
             stock["Current Price"] = current_stock_price
             stock["%Chng"] = calculate_perc_change(current_stock_price, float(stock["Purchased@"]))
@@ -166,7 +165,7 @@ def update_stock_info(stock_list, totals):
 
             new_invested_amount += total_price
 
-    totals["Total Invested"] = f"${'{:.2f}'.format(new_invested_amount)}"
+    totals["Total Invested"] = f"${new_invested_amount:.2f}"
     return stock_list, totals
 
 
@@ -190,7 +189,7 @@ def add_stock(stock_list, totals: dict, current_index):
         except ValueError:
             print("Enter valid quantity")
 
-    total_cost = current_price * user_input_quantity
+    total_cost = float(f"{current_price * user_input_quantity:.2f}")
     total_cash_available = float(totals["Total Cash"][1:])
     total_invested_already = float(totals["Total Invested"][1:])
     remaining_cash = total_cash_available - total_cost
@@ -202,8 +201,8 @@ def add_stock(stock_list, totals: dict, current_index):
         return stock_list, totals, current_index
     else:
         # updates values in totals to after transaction is completed
-        totals["Total Cash"] = f"${'{:.2f}'.format(remaining_cash)}"
-        totals["Total Invested"] = f"${'{:.2f}'.format(total_invested_already + total_cost)}"
+        totals["Total Cash"] = f"${remaining_cash:.2f}"
+        totals["Total Invested"] = f"${total_invested_already + total_cost:.2f}"
 
         try:
             stock_name = get_stock_name(user_input_tckr, api_key)
@@ -224,7 +223,6 @@ def add_stock(stock_list, totals: dict, current_index):
 
             stock_list.append(new_info)
             input("Stock has been added, press enter to continue: ")
-            print()
 
             return stock_list, totals, current_index
 
@@ -247,8 +245,7 @@ def get_current_stock_price(ticker, api):
         elif response["code"] == 429:
             print("Maximum API credits within the minute have been used")
             print("Please wait 60 seconds for API reset")
-            print(input("Press enter to continue, data will not be refreshed: "))
-            print()
+            input("Press enter to continue, data will not be refreshed: ")
             raise KeyError
     else:
         current_price = response["price"][:-3]
@@ -264,7 +261,6 @@ def get_stock_name(ticker, api):
             print("Maximum API credits within the minute have been used")
             print("Please wait 60 seconds for API reset")
             input("Press enter to continue: ")
-            print()
             raise KeyError
     else:
         return response["name"]
@@ -291,6 +287,7 @@ def main():
     stocks, totals = update_stock_info(stocks, totals)
 
     while True:
+        print()
         print(get_totals_table(totals))
         print_table(stocks)
 
